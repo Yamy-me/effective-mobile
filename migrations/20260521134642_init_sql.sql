@@ -9,4 +9,4 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 );
 
 -- +goose Down
-SELECT 'down SQL query';
+
