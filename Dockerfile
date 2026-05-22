@@ -13,7 +13,7 @@ FROM alpine:3.21
 
 WORKDIR /app
 
-COPY --from=builder /app/server .
+COPY --from=builder /app/main .
 
 EXPOSE 8085
 
