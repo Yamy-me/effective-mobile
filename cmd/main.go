@@ -29,10 +29,11 @@ func main() {
 	}
 	// Database Connection
 	db, err := sql.Open("pgx", cfg.DSN)
-	if err != nil{
+	if err != nil {
 		slog.Error("Подключение к ДБ отсуствует")
 		return
 	}
+	slog.Info("Подключились к DB...")
 
 	// Repository
 	repo := repository.NewPostgresRepo(db)
@@ -40,14 +41,18 @@ func main() {
 	// Service manager
 	service := service.NewSubscriptionService(repo)
 
-	// Handler 
+	// Handler
 	hnd := handler.NewHandler(service)
 
 	// Server initialization
-	gin.SetMode(gin.ReleaseMode)
-
 	server := gin.New()
 	server.Use(logger.MiddleWareLogger())
 	server.Use(gin.Recovery())
 	handler.InitRoutes(server, hnd)
+
+	err = server.Run(":" + cfg.PORT)
+	if err != nil {
+		slog.Error("Ошибка запуска сервера", slog.String("error", err.Error()))
+		return
+	}
 }
