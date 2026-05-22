@@ -11,7 +11,7 @@ type Configs struct {
 	DSN string
 }
 
-func RunConfigs() *Configs {
+func LoadConfigs() *Configs {
 	err := godotenv.Load("../.env")
 	if err != nil {
 		slog.Error(".env Problem", slog.String("error", err.Error()))

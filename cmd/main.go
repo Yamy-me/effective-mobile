@@ -2,34 +2,33 @@ package main
 
 import (
 	"log/slog"
-	"os"
-	"time"
 
 	"Effective-Mobile/internal/config"
+	"Effective-Mobile/internal/logger"
 	"Effective-Mobile/internal/repository"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	logger := NewLoger()
-	slog.SetDefault(logger)
-	cfg := config.RunConfigs()
+	// Logger
+	logger.NewLogger()
+
+	// Load configs
+	cfg := config.LoadConfigs()
 
 	err := repository.RunMigrations(cfg.DSN)
 	if err != nil {
 		slog.Error("Ошибка с миграцией", slog.String("error", err.Error()))
+		return
 	}
-}
 
-func NewLoger() *slog.Logger {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			if a.Key == slog.TimeKey && len(groups) == 0 {
-				return slog.String(a.Key, a.Value.Time().Format(time.DateTime))
-			}
-			return a
-		},
-	}))
+	// Server initialization
+	gin.SetMode(gin.ReleaseMode)
 
-	return log
+	server := gin.New()
+	server.Use(logger.MiddleWareLogger())
+	server.Use(gin.Recovery())
+
+	
 }
