@@ -1,11 +1,12 @@
 package repository
 
-
 import (
-	models "Effective-Mobile/internal/model"
 	"context"
+
+	models "Effective-Mobile/internal/model"
 )
 
 type Repository interface {
-	Create(context.Context, models.Subscription)
+	CreateSubs(ctx context.Context, subs *models.Subscription) (int, error)
+	GetSubsByID(ctx context.Context, id int) (*models.Subscription, error)
 }
