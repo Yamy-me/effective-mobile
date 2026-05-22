@@ -20,10 +20,15 @@ func main() {
 	}
 }
 
-
 func NewLoger() *slog.Logger {
 	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.TimeKey && len(groups) == 0 {
+				return slog.String(a.Key, a.Value.Time().Format(time.DateTime))
+			}
+			return a
+		},
 	}))
 
 	return log
