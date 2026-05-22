@@ -25,3 +25,17 @@ type SubResponse struct {
 	StartDate   MonthYear  `json:"start_date"`
 	EndDate     *MonthYear `json:"end_date"`
 }
+
+type ListFilterRequest struct {
+	UserID      *uuid.UUID `form:"user_id"`
+	ServiceName *string    `form:"service_name"`
+	FromDate    *string    `form:"from_date"`
+	ToDate      *string    `form:"to_date"`
+}
+
+type TotalCostRequest struct {
+	UserID      uuid.UUID `form:"user_id" binding:"required"`
+	ServiceName *string   `form:"service_name"`
+	FromDate    string    `form:"from_date" binding:"required"`
+	ToDate      string    `form:"to_date" binding:"required"`
+}
