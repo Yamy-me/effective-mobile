@@ -1,29 +1,25 @@
 package main
 
 import (
-	"Effective-Mobile/pkg/repository"
-	"log"
 	"log/slog"
 	"os"
+	"time"
 
-	"github.com/joho/godotenv"
+	"Effective-Mobile/internal/config"
+	"Effective-Mobile/internal/repository"
 )
 
 func main() {
-	godotenv.Load("../.env")
-
 	logger := NewLoger()
 	slog.SetDefault(logger)
+	cfg := config.RunConfigs()
 
-	DSN := os.Getenv("DSN")
-
-	log.Println(DSN)
-
-	err := repository.RunMigrations(DSN)
+	err := repository.RunMigrations(cfg.DSN)
 	if err != nil {
 		slog.Error("Ошибка с миграцией", slog.String("error", err.Error()))
 	}
 }
+
 
 func NewLoger() *slog.Logger {
 	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
