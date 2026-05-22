@@ -7,6 +7,8 @@ import (
 	"log/slog"
 
 	models "Effective-Mobile/internal/model"
+
+	"github.com/google/uuid"
 )
 
 type PostgresRepository struct {
@@ -33,7 +35,7 @@ func (r *PostgresRepository) CreateSubs(ctx context.Context, subs *models.Subscr
 
 func (r *PostgresRepository) GetSubsByID(ctx context.Context, id int) (*models.Subscription, error) {
 	var Subscription models.Subscription
-	query := `SELECT * FROM subscriptions WHERE id = $1`
+	query := `SELECT id, service_name, price, user_id, start_date, end_date FROM subscriptions WHERE id = $1`
 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&Subscription.ID,
@@ -95,7 +97,7 @@ func (r *PostgresRepository) UpdateSubs(ctx context.Context, id int, subs models
 
 	if rowsAffected == 0 {
 		slog.Info("попытка обновить несуществующую подписку", slog.Int("id", id))
-		return sql.ErrNoRows
+		return fmt.Errorf("попытка обновить несуществующую подписку")
 	}
 
 	slog.Info("подписка успешно обновлена", slog.Int("id", id))
@@ -184,4 +186,47 @@ func (r *PostgresRepository) ListSubs(ctx context.Context, filter models.ListFil
 	}
 
 	return subs, nil
+}
+
+func (r *PostgresRepository) TotalCost(ctx context.Context, userID uuid.UUID, filter models.TotalCostFilter) (int, error) {
+	query := `SELECT COALESCE(SUM(price), 0) FROM subscriptions WHERE user_id = $1`
+
+	args := []any{userID}
+	argID := 2
+
+	if filter.ServiceName != nil {
+		query += fmt.Sprintf(" AND service_name = $%d", argID)
+		args = append(args, *filter.ServiceName)
+		argID++
+	}
+
+	if filter.ToDate != nil {
+		query += fmt.Sprintf(" AND start_date <= $%d", argID)
+		args = append(args, *filter.ToDate)
+		argID++
+	}
+
+	if filter.FromDate != nil {
+		query += fmt.Sprintf(" AND (end_date IS NULL OR end_date >= $%d)", argID)
+		args = append(args, *filter.FromDate)
+		argID++
+	}
+
+	var totalCost int
+
+	err := r.db.QueryRowContext(ctx, query, args...).Scan(&totalCost)
+	if err != nil {
+		slog.Error("ошибка при подсчете общей стоимости подписок",
+			slog.String("user_id", userID.String()),
+			slog.String("error", err.Error()),
+		)
+		return 0, err
+	}
+
+	slog.Info("успешно подсчитана стоимость подписок",
+		slog.String("user_id", userID.String()),
+		slog.Int("total_cost", totalCost),
+	)
+
+	return totalCost, nil
 }
