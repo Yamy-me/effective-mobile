@@ -14,3 +14,10 @@ type Subscription struct {
 	StartDate   time.Time  `json:"start_date" db:"start_date"`
 	EndDate     *time.Time `json:"end_date,omitempty" db:"end_date"`
 }
+
+type ListFilter struct {
+	UserID      *string
+	ServiceName *string
+	FromDate    *time.Time
+	ToDate      *time.Time
+}
